@@ -65,6 +65,8 @@ class CachedNetworkImageProvider
   /// Render option for images on the web platform.
   final ImageRenderMethodForWeb imageRenderMethodForWeb;
 
+  BaseCacheManager get _cacheManager => cacheManager ?? DefaultCacheManager();
+
   @override
   Future<CachedNetworkImageProvider> obtainKey(
       ImageConfiguration configuration) {
@@ -104,7 +106,7 @@ class CachedNetworkImageProvider
       cacheKey,
       chunkEvents,
       decode,
-      cacheManager ?? DefaultCacheManager(),
+      _cacheManager,
       maxHeight,
       maxWidth,
       headers,
@@ -143,7 +145,7 @@ class CachedNetworkImageProvider
       cacheKey,
       chunkEvents,
       decode,
-      cacheManager ?? DefaultCacheManager(),
+      _cacheManager,
       maxHeight,
       maxWidth,
       headers,
@@ -169,4 +171,17 @@ class CachedNetworkImageProvider
 
   @override
   String toString() => '$runtimeType("$url", scale: $scale)';
+
+  ///返回图片的字节流
+  Future<Uint8List> getBytes() async {
+    var stream = (_cacheManager as ImageCacheManager).getImageFile(url,
+        maxHeight: maxHeight,
+        maxWidth: maxWidth,
+        withProgress: false,
+        headers: headers,
+        key: cacheKey);
+    var result = await stream.first;
+
+    return (result as FileInfo).file.readAsBytesSync();
+  }
 }
